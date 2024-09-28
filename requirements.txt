@@ -1,2 +1,4 @@
 dlt
 dlt[duckdb]
+garth
+garminconnect

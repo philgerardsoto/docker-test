@@ -1,20 +1,27 @@
-# Use a base image with Jupyter Notebook pre-installed
-FROM quay.io/jupyter/base-notebook
+FROM python:3.9-slim
 
-# Copy the requirements.txt file into the container
-COPY requirements.txt /tmp/
+# Update and install system packages
+RUN apt-get update -y && \
+  apt-get install --no-install-recommends -y -q \
+  git libpq-dev && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install the packages listed in requirements.txt
-RUN pip install -r /tmp/requirements.txt
+# Set Garmin ENV Variables
+ARG GARMIN_USER
+ARG GARMIN_PASS
 
-# Set a working directory inside the container
-WORKDIR /home/personal-well-being-dashboard/work
+ENV GARMIN_USER=$GARMIN_USER
+ENV GARMIN_PASS=$GARMIN_PASS
 
-# Copy your existing notebook into the working directory
-COPY well-being-notebook.ipynb /home/personal-well-being-dashboard/work/
+# Set working directory
+WORKDIR app
 
-# Expose the port for Jupyter Notebook
-EXPOSE 8888
+# Copy requirements
+COPY requirements.txt .
 
-# Start the Jupyter Notebook server with a custom token
-CMD ["start-notebook.py", "--NotebookApp.token='my-token'"]
+# Install DBT
+RUN pip install -U pip
+RUN pip install -r requirements.txt
+
+COPY extraction ./extraction
